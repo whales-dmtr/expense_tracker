@@ -4,7 +4,7 @@
 venv/
 **/.env
 **/.env.local
-.python-version
+**/.python-version
 
 *.log
 logs/
@@ -14,4 +14,6 @@ uvicorn.log
 
 .vscode/
 *.swp
-.obsidian/
+**/.obsidian/
+
+**/.DS_Store
