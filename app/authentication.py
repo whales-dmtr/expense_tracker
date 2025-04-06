@@ -1,47 +1,90 @@
-from fastapi import APIRouter
-from app.schemas import LoginValidation, RegisterValidation
-from dotenv import load_dotenv
-from argon2 import PasswordHasher
+from types import NoneType
+from typing import Annotated
+from datetime import timedelta, datetime
+
+import jwt
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from argon2 import PasswordHasher, exceptions
 import psycopg2
-import os
+
+
+from app.schemas import LoginValidation, RegisterValidation, Token
+import app.constants as const
+
 
 router = APIRouter()
-load_dotenv()
 
 
-@router.get('/login')
-def login(user: LoginValidation) -> dict[str, str]:
+def create_token(payload: dict, minutes_expires : int | None = None) -> str:
+    if minutes_expires :
+        time_available = datetime.now() + timedelta(minutes=minutes_expires)
+    else:
+        time_available = datetime.now() + timedelta(minutes=15)
+
+    payload.update({'exp': time_available})
+    token = jwt.encode(payload, const.SECRET_KEY, const.ALGORITHM)
+
+    return token
+
+
+def verify_user(user: LoginValidation) -> bool:
     with psycopg2.connect(
-        dbname=os.getenv('DB_NAME'),
-        user=os.getenv('DB_USER'),
-        password=os.getenv('DB_PASSWORD'),
-        host=os.getenv('DB_HOST'),
-        port=os.getenv('DB_PORT'),
+        dbname=const.DB_NAME,
+        user=const.DB_USER,
+        password=const.DB_PASSWORD,
+        host=const.DB_HOST,
+        port=const.DB_PORT,
     ) as connection:
         with connection.cursor() as cursor:
-            try:
-                cursor.execute(f"""SELECT password FROM users 
-                                WHERE username = '{user.username}'""")
+            cursor.execute("SELECT password FROM users WHERE username = %s;", (user.username,))
+            result = cursor.fetchone()
 
-                true_user_pass_hash = cursor.fetchone()[0]
-                True if true_user_pass_hash is not None else False
+            if isinstance(result, NoneType):
+                return False
+            elif isinstance(result, tuple):
+                correct_password_hash = result[0]
 
                 ph = PasswordHasher()
-                ph.verify(true_user_pass_hash, user.password)
 
-                return {'logged_in': 'True'}
-            except:
-                return {'logged_in': 'False'}
+                try:
+                    ph.verify(correct_password_hash, user.password)
+                except exceptions.VerifyMismatchError as e:
+                    print(e)
+                    return False
+
+                cursor.execute("SELECT id FROM users WHERE username = %s", (user.username,))
+
+                user_id = cursor.fetchone()
+
+                return user_id
+
+
+@router.post('/login')
+def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+    verified_user_id = verify_user(user)
+
+    if not verified_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+        )
+    
+    access_token = create_token(
+        payload={'sub': verified_user_id}  # subject of the token
+    )
+
+    return Token(access_token=access_token, token_type='bearer')
 
 
 @router.post('/register')
 def register(user: RegisterValidation) -> dict[str, str]:
     with psycopg2.connect(
-        dbname=os.getenv('DB_NAME'),
-        user=os.getenv('DB_USER'),
-        password=os.getenv('DB_PASSWORD'),
-        host=os.getenv('DB_HOST'),
-        port=os.getenv('DB_PORT'),
+        dbname=const.DB_NAME,
+        user=const.DB_USER,
+        password=const.DB_PASSWORD,
+        host=const.DB_HOST,
+        port=const.DB_PORT,
     ) as connection:
         with connection.cursor() as cursor:
             ph = PasswordHasher()
