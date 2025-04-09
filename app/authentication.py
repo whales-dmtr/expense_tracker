@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from argon2 import PasswordHasher, exceptions
 import psycopg2
 
@@ -14,6 +14,7 @@ import app.constants as const
 
 
 router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def create_token(payload: dict, minutes_expires : int | None = None) -> str:
@@ -26,6 +27,21 @@ def create_token(payload: dict, minutes_expires : int | None = None) -> str:
     token = jwt.encode(payload, const.SECRET_KEY, const.ALGORITHM)
 
     return token
+
+
+def check_user_exist(username) -> bool:
+    with psycopg2.connect(
+        dbname=const.DB_NAME,
+        user=const.DB_USER,
+        password=const.DB_PASSWORD,
+        host=const.DB_HOST,
+        port=const.DB_PORT,
+    ) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT password FROM users WHERE username = %s;", (username,))
+            user_exists = bool(cursor.fetchone())
+
+            return user_exists
 
 
 def verify_user(user: LoginValidation) -> bool:
@@ -55,7 +71,7 @@ def verify_user(user: LoginValidation) -> bool:
 
                 cursor.execute("SELECT id FROM users WHERE username = %s", (user.username,))
 
-                user_id = cursor.fetchone()
+                user_id = cursor.fetchone()[0]
 
                 return user_id
 
@@ -69,9 +85,9 @@ def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
-    
+
     access_token = create_token(
-        payload={'sub': verified_user_id}  # subject of the token
+        payload={'sub': str(verified_user_id)}  # subject of the token
     )
 
     return Token(access_token=access_token, token_type='bearer')
