@@ -29,7 +29,7 @@ def create_token(payload: dict, minutes_expires : int | None = None) -> str:
     return token
 
 
-def check_user_exist(username) -> bool:
+def get_username_by_id(id) -> bool:
     with psycopg2.connect(
         dbname=const.DB_NAME,
         user=const.DB_USER,
@@ -38,10 +38,10 @@ def check_user_exist(username) -> bool:
         port=const.DB_PORT,
     ) as connection:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT password FROM users WHERE username = %s;", (username,))
-            user_exists = bool(cursor.fetchone())
+            cursor.execute("SELECT username FROM users WHERE id = %s;", (id,))
+            username = cursor.fetchone()[0]
 
-            return user_exists
+            return username
 
 
 def verify_user(user: LoginValidation) -> bool:
