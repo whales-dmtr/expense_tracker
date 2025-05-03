@@ -21,7 +21,7 @@ def create_token(payload: dict, minutes_expires : int | None = None) -> str:
     if minutes_expires :
         time_available = datetime.now() + timedelta(minutes=minutes_expires)
     else:
-        time_available = datetime.now() + timedelta(minutes=15)
+        time_available = datetime.now() + timedelta(minutes=5)
 
     payload.update({'exp': time_available})
     token = jwt.encode(payload, const.SECRET_KEY, const.ALGORITHM)
@@ -87,7 +87,7 @@ def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
         )
 
     access_token = create_token(
-        payload={'sub': str(verified_user_id)}  # subject of the token
+        payload={'sub': str(verified_user_id)}  # subject is the id of user
     )
 
     return Token(access_token=access_token, token_type='bearer')
