@@ -11,6 +11,7 @@ import psycopg2
 
 from app.schemas import LoginValidation, RegisterValidation, Token
 import app.constants as const
+from app.constants import SECRET_KEY, ALGORITHM
 
 
 router = APIRouter()
@@ -44,6 +45,19 @@ def get_username_by_id(id) -> bool:
             return username
 
 
+def check_user_existence(id: int) -> bool:
+    with psycopg2.connect(
+        dbname=const.DB_NAME,
+        user=const.DB_USER,
+        password=const.DB_PASSWORD,
+        host=const.DB_HOST,
+        port=const.DB_PORT,
+    ) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id FROM users WHERE id = %s;", (id,))
+            return bool(cursor.fetchone()[0])
+
+
 def verify_user(user: LoginValidation) -> bool:
     with psycopg2.connect(
         dbname=const.DB_NAME,
@@ -74,6 +88,23 @@ def verify_user(user: LoginValidation) -> bool:
                 user_id = cursor.fetchone()[0]
 
                 return user_id
+
+
+def verify_token(token: str) -> int:
+    """If token is valid function returns id of user. In other way it raise an error."""
+    unauth_error = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=f"Your jwt is invalid.",
+    )
+    try:
+        payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        id = payload.get("sub")
+        if not check_user_existence(id):
+            return unauth_error
+    except jwt.InvalidTokenError:
+        raise unauth_error
+
+    return id 
 
 
 @router.post('/login')
