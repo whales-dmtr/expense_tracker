@@ -1,6 +1,6 @@
 from types import NoneType
 from typing import Annotated
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -15,14 +15,14 @@ from app.constants import SECRET_KEY, ALGORITHM
 
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 def create_token(payload: dict, minutes_expires : int | None = None) -> str:
     if minutes_expires :
-        time_available = datetime.now() + timedelta(minutes=minutes_expires)
+        time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=minutes_expires)
     else:
-        time_available = datetime.now() + timedelta(minutes=5)
+        time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=5)
 
     payload.update({'exp': time_available})
     token = jwt.encode(payload, const.SECRET_KEY, const.ALGORITHM)
@@ -118,7 +118,7 @@ def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
         )
 
     access_token = create_token(
-        payload={'sub': str(verified_user_id)}  # subject is the id of user
+        payload={'sub': str(verified_user_id)},  # subject is the id of user
     )
 
     return Token(access_token=access_token, token_type='bearer')
