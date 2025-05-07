@@ -1,5 +1,7 @@
+from typing import Annotated, Optional
+from datetime import datetime
+
 from pydantic import BaseModel, Field
-from typing import Annotated
 
 
 class LoginValidation(BaseModel):
@@ -14,3 +16,10 @@ class RegisterValidation(LoginValidation):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class ExpenseData(BaseModel):
+    id: Optional[int]
+    desc: Annotated[str, Field(max_length=50)]
+    amount: float
+    time_created: Optional[datetime]

@@ -10,6 +10,7 @@ import psycopg2
 
 
 from app.schemas import LoginValidation, RegisterValidation, Token
+from app.constants import DB_CONN_DATA
 import app.constants as const
 from app.constants import SECRET_KEY, ALGORITHM
 
@@ -31,13 +32,7 @@ def create_token(payload: dict, minutes_expires : int | None = None) -> str:
 
 
 def get_username_by_id(id) -> bool:
-    with psycopg2.connect(
-        dbname=const.DB_NAME,
-        user=const.DB_USER,
-        password=const.DB_PASSWORD,
-        host=const.DB_HOST,
-        port=const.DB_PORT,
-    ) as connection:
+    with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT username FROM users WHERE id = %s;", (id,))
             username = cursor.fetchone()[0]
@@ -46,26 +41,14 @@ def get_username_by_id(id) -> bool:
 
 
 def check_user_existence(id: int) -> bool:
-    with psycopg2.connect(
-        dbname=const.DB_NAME,
-        user=const.DB_USER,
-        password=const.DB_PASSWORD,
-        host=const.DB_HOST,
-        port=const.DB_PORT,
-    ) as connection:
+    with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT id FROM users WHERE id = %s;", (id,))
             return bool(cursor.fetchone()[0])
 
 
 def verify_user(user: LoginValidation) -> bool:
-    with psycopg2.connect(
-        dbname=const.DB_NAME,
-        user=const.DB_USER,
-        password=const.DB_PASSWORD,
-        host=const.DB_HOST,
-        port=const.DB_PORT,
-    ) as connection:
+    with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT password FROM users WHERE username = %s;", (user.username,))
             result = cursor.fetchone()
@@ -107,7 +90,7 @@ def verify_token(token: str) -> int:
     return id 
 
 
-@router.post('/login')
+@router.post('/login') 
 def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     verified_user_id = verify_user(user)
 
@@ -126,13 +109,7 @@ def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
 
 @router.post('/register')
 def register(user: RegisterValidation) -> dict[str, str]:
-    with psycopg2.connect(
-        dbname=const.DB_NAME,
-        user=const.DB_USER,
-        password=const.DB_PASSWORD,
-        host=const.DB_HOST,
-        port=const.DB_PORT,
-    ) as connection:
+    with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             ph = PasswordHasher()
             hashed_password = ph.hash(user.password)
