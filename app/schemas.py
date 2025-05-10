@@ -4,13 +4,22 @@ from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, Field
 
 
-class LoginValidation(BaseModel):
-    username: Annotated[str, Field(max_length=15)]
-    password: Annotated[str, Field(max_length=10)]
+class UserLoginData(BaseModel):
+    """
+    This schema has made for control a length of username and password 
+    when user is logging in.
+    """
+    username: str
+    password: str
 
 
-class RegisterValidation(LoginValidation):
-    email: Annotated[str, Field(max_length=255)]
+class UserFullData(UserLoginData):
+    id: None | int
+    """
+    This schema has made for control a length of username, password and email 
+    when user is registering.
+    """
+    email: str
 
 
 class Token(BaseModel):

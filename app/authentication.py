@@ -9,23 +9,32 @@ from argon2 import PasswordHasher, exceptions
 import psycopg2
 
 
-from app.schemas import LoginValidation, RegisterValidation, Token
+from app.schemas import UserLoginData, UserFullData, Token
 from app.constants import DB_CONN_DATA
 import app.constants as const
 from app.constants import SECRET_KEY, ALGORITHM
 
 
 router = APIRouter()
+# variable for authorize users
+# This is an example how to add authorization to endpoint
+#   @app.get('/me')
+#   def get_username(token: Annotated[str, Depends(oauth2_scheme)]) -> dict[str, str]:
+# In tokenUrl you need to write the name of endpoint from which you get the JWT token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
+# function for create JWT token with time expiration
 def create_token(payload: dict, minutes_expires : int | None = None) -> str:
-    if minutes_expires :
+    # don't forget about your timezone
+    if minutes_expires:
         time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=minutes_expires)
     else:
         time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=5)
 
+    # add expiration time
     payload.update({'exp': time_available})
+    # make finished JWT token
     token = jwt.encode(payload, const.SECRET_KEY, const.ALGORITHM)
 
     return token
@@ -47,7 +56,9 @@ def check_user_existence(id: int) -> bool:
             return bool(cursor.fetchone()[0])
 
 
-def verify_user(user: LoginValidation) -> int | bool:
+# this function check user credentials in db, check length (through schemas)
+# and return the id
+def verify_user(user: UserLoginData) -> int | bool:
     with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT password FROM users WHERE username = %s;", (user.username,))
@@ -58,6 +69,7 @@ def verify_user(user: LoginValidation) -> int | bool:
             elif isinstance(result, tuple):
                 correct_password_hash = result[0]
 
+                # passwords is hashed so I need to use password manager
                 ph = PasswordHasher()
 
                 try:
@@ -73,7 +85,7 @@ def verify_user(user: LoginValidation) -> int | bool:
                 return user_id
 
 
-def verify_token(token: str) -> int:
+def verify_token(token: Annotated[str, Depends(oauth2_scheme)]) -> UserFullData:
     """If token is valid function returns id of user. In other way it raise an error."""
     unauth_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -87,28 +99,46 @@ def verify_token(token: str) -> int:
     except jwt.InvalidTokenError:
         raise unauth_error
 
-    return id 
+    with psycopg2.connect(**DB_CONN_DATA) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM users WHERE id = %s", (id, ))
+            user_data = cursor.fetchone()
+            user = UserFullData(
+                id = user_data[0],
+                username = user_data[1],
+                password = user_data[2],
+                email = user_data[3],
+            )
+            
+    return user 
 
 
+# this is the endpoint for login user and give him a token
+# it gets OAuth2PasswordRequestForm schema which already has username and password fields 
+# for authentification its better to use it  
+# Annotated[..., Depends()] is boilerplate
 @router.post('/login') 
 def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     verified_user_id = verify_user(user)
 
+    # if client enter wrong credentials function raise an error
     if not verified_user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
 
+    # create JWT token with user id
     access_token = create_token(
         payload={'sub': str(verified_user_id)},  # subject is the id of user
     )
 
+    # return JWT as a pydantic model
     return Token(access_token=access_token, token_type='bearer')
 
 
 @router.post('/register')
-def register(user: RegisterValidation) -> dict[str, str]:
+def register(user: UserFullData) -> dict[str, str]:
     with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             ph = PasswordHasher()
