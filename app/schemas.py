@@ -1,5 +1,5 @@
 from typing import Annotated, Optional
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from pydantic import BaseModel, Field
 
@@ -20,6 +20,10 @@ class Token(BaseModel):
 
 class ExpenseData(BaseModel):
     id: Optional[int]
-    desc: Annotated[str, Field(max_length=50)]
-    amount: float
-    time_created: Optional[datetime]
+    desc: Annotated[str, Field(min_length=1, max_length=50)]
+    amount: Annotated[float, Field(gt=0)]
+    time_created: Annotated[
+        Optional[datetime],   
+        # The default value of the field is the time of expense creation 
+        Field(default_factory=datetime.now(timezone(timedelta(hours=3))))
+    ]

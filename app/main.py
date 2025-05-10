@@ -1,10 +1,8 @@
 from typing import Annotated
 
-import jwt
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends
 
 import app.authentication as auth
-import app.expenses as expenses
 
 from app.authentication import oauth2_scheme, get_username_by_id, verify_token
 
@@ -12,7 +10,6 @@ from app.authentication import oauth2_scheme, get_username_by_id, verify_token
 app = FastAPI()
 
 app.include_router(auth.router)
-app.include_router(expenses.router)
 
 
 @app.get('/me')
