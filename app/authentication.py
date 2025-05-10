@@ -47,7 +47,7 @@ def check_user_existence(id: int) -> bool:
             return bool(cursor.fetchone()[0])
 
 
-def verify_user(user: LoginValidation) -> bool:
+def verify_user(user: LoginValidation) -> int | bool:
     with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT password FROM users WHERE username = %s;", (user.username,))

@@ -12,7 +12,6 @@ from app.authentication import oauth2_scheme, get_username_by_id, verify_token
 app = FastAPI()
 
 app.include_router(auth.router)
-app.include_router(expenses.router)
 
 
 @app.get('/me')
