@@ -28,11 +28,7 @@ class Token(BaseModel):
 
 
 class ExpenseData(BaseModel):
-    id: Optional[int]
     desc: Annotated[str, Field(min_length=1, max_length=50)]
     amount: Annotated[float, Field(gt=0)]
-    time_created: Annotated[
-        Optional[datetime],   
-        # The default value of the field is the time of expense creation 
-        Field(default_factory=datetime.now(timezone(timedelta(hours=3))))
-    ]
+    time_created: None | datetime = None
+    category: None | Annotated[str, Field(min_length=6, max_length=11)] = None

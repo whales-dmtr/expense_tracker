@@ -131,6 +131,7 @@ def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     # create JWT token with user id
     access_token = create_token(
         payload={'sub': str(verified_user_id)},  # subject is the id of user
+        minutes_expires=20,
     )
 
     # return JWT as a pydantic model
