@@ -1,7 +1,7 @@
-from typing import Annotated, Optional
-from datetime import datetime, timedelta, timezone
+from typing import Annotated
+from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 
 
 class UserLoginData(BaseModel):
@@ -9,17 +9,18 @@ class UserLoginData(BaseModel):
     This schema has made for control a length of username and password 
     when user is logging in.
     """
-    username: str
-    password: str
+    username: Annotated[str, Field(min_length=3, max_length=15)]
+    password: Annotated[str, Field(min_length=4, max_length=20)]
 
 
 class UserFullData(UserLoginData):
-    id: None | int
     """
     This schema has made for control a length of username, password and email 
     when user is registering.
     """
-    email: str
+    id: None | int
+    email: EmailStr
+    password: str
 
 
 class Token(BaseModel):
@@ -32,3 +33,14 @@ class ExpenseData(BaseModel):
     amount: Annotated[float, Field(gt=0)]
     time_created: None | datetime = None
     category: None | Annotated[str, Field(min_length=6, max_length=11)] = None
+
+
+class ExpenseFullData(ExpenseData):
+    """
+    All expense fields from db for full view.
+    """
+    expense_id: int
+    owner: str
+    time_created: str
+
+
