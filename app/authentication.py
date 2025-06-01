@@ -9,7 +9,7 @@ from argon2 import PasswordHasher, exceptions
 import psycopg2
 
 
-from app.schemas import UserLoginData, UserFullData, Token
+from app.schemas import UserLoginData, UserRegisterData, UserFullData, Token
 from app.constants import DB_CONN_DATA
 import app.constants as const
 from app.constants import SECRET_KEY, ALGORITHM
@@ -89,7 +89,7 @@ def verify_token(token: Annotated[str, Depends(oauth2_scheme)]) -> UserFullData:
     """If token is valid function returns id of user. In other way it raise an error."""
     unauth_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=f"Your jwt is invalid.",
+        detail="Your jwt is invalid.",
     )
     try:
         payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -139,18 +139,36 @@ def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
 
 
 @router.post('/register')
-def register(user: UserFullData) -> dict[str, str]:
+def register(user: UserRegisterData) -> dict[str, dict[str, str]]:
     with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             ph = PasswordHasher()
             hashed_password = ph.hash(user.password)
-            cursor.execute(f"""INSERT INTO users (id, username, password, email) 
-                            VALUES (nextval('users_id_seq'), '{user.username}', '{hashed_password}', '{user.email}')""")
+            try:
+                create_new_user_query = "INSERT INTO users (id, username, password, email) VALUES (nextval('users_id_seq'), %s, %s, %s)"
+                cursor.execute(create_new_user_query, (user.username, hashed_password, user.email))
+            except psycopg2.errors.UniqueViolation as e:
+                duplicate = e.diag.constraint_name
+                if duplicate == 'users_username_key':
+                    raise HTTPException(
+                        status_code=400,
+                        detail="User with this username already exists."
+                    )
+                elif duplicate == 'users_email_key':
+                    raise HTTPException(
+                        status_code=400,
+                        detail="User with this email already exists."
+                    )
 
-            cursor.execute(f"""SELECT * FROM users 
-                            WHERE username = '{user.username}'""")
-            user_data = str(cursor.fetchone())
+            check_new_user_query = "SELECT * FROM users WHERE username = %s"
+            cursor.execute(check_new_user_query, (user.username,))
+            user_data = cursor.fetchone()
+            user_string_data = {
+                "id": str(user_data[0]),
+                "username": str(user_data[1]),
+                "email": str(user_data[2]),
+            }
 
             connection.commit()
 
-            return {'user': user_data}
+            return {'user': user_string_data}

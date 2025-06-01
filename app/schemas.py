@@ -13,12 +13,22 @@ class UserLoginData(BaseModel):
     password: Annotated[str, Field(min_length=4, max_length=20)]
 
 
+class UserRegisterData(BaseModel):
+    """
+    This schema has made for control a length of username, password and email 
+    when user is registering.
+    """
+    email: EmailStr
+    password: str
+
+
+
 class UserFullData(UserLoginData):
     """
     This schema has made for control a length of username, password and email 
     when user is registering.
     """
-    id: None | int
+    id: int
     email: EmailStr
     password: str
 
