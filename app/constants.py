@@ -16,6 +16,7 @@ DB_CONN_DATA = {
     'host': DB_HOST,
     'port': DB_PORT,
 }
+SQLALCHEMY_DATABASE_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
 
 SECRET_KEY=os.getenv('SECRET_KEY')
 ALGORITHM=os.getenv('ALGORITHM')

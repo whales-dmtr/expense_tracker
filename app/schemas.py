@@ -1,36 +1,24 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from datetime import datetime
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, EmailStr
+from sqlmodel import SQLModel, Field, String
+from sqlalchemy import Sequence
 
 
-class UserLoginData(BaseModel):
-    """
-    This schema has made for control a length of username and password 
-    when user is logging in.
-    """
-    username: Annotated[str, Field(min_length=3, max_length=15)]
-    password: Annotated[str, Field(min_length=4, max_length=20)]
-
-
-class UserRegisterData(BaseModel):
-    """
-    This schema has made for control a length of username, password and email 
-    when user is registering.
-    """
+class UserData(BaseModel):
+    id: None | int = None
+    username: str
     email: EmailStr
-    password: str
+    password: None | str
 
 
-
-class UserFullData(UserLoginData):
-    """
-    This schema has made for control a length of username, password and email 
-    when user is registering.
-    """
-    id: int
-    email: EmailStr
-    password: str
+class ExpenseData(BaseModel):
+    id: None | int = None
+    desc: str
+    amount: float
+    time_created: None | str = None
+    category: None | str = None
 
 
 class Token(BaseModel):
@@ -38,19 +26,36 @@ class Token(BaseModel):
     token_type: str
 
 
-class ExpenseData(BaseModel):
-    desc: Annotated[str, Field(min_length=1, max_length=50)]
-    amount: Annotated[float, Field(gt=0)]
-    time_created: None | datetime = None
-    category: None | Annotated[str, Field(min_length=6, max_length=11)] = None
+users_id_seq = Sequence('users_id_seq')
+
+class User(SQLModel, table=True):
+    __tablename__ = 'users'
+
+    id: int = Field(default=users_id_seq.next_value(), primary_key=True)
+    username: str = Field(String(50), unique=True, nullable=False)
+    password: str = Field(nullable=False)
+    email: EmailStr = Field(nullable=False)
+
+    def convert_to_user_data(self) -> UserData:
+        user_data = UserData(
+            id=self.id,
+            username=self.username,
+            password=None,
+            email=self.email
+        )
+        return user_data
 
 
-class ExpenseFullData(ExpenseData):
-    """
-    All expense fields from db for full view.
-    """
-    expense_id: int
-    owner: str
-    time_created: str
+expenses_id_seq = Sequence('expenses_id_seq')
 
+
+class Expense(SQLModel, table=True):
+    __tablename__ = 'expenses'
+
+    id: Optional[int] = Field(default=expenses_id_seq.next_value(), primary_key=True)
+    description: str = Field(min_length=1, max_length=50, nullable=False)
+    amount: float = Field(gt=0, nullable=False)
+    time_created: datetime = Field(nullable=False)
+    category: str = Field(min_length=6, max_length=11)
+    user_id: int = Field(foreign_key="users.id")
 

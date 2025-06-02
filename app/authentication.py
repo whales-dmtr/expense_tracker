@@ -1,174 +1,115 @@
-from types import NoneType
 from typing import Annotated
 from datetime import timedelta, datetime, timezone
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from argon2 import PasswordHasher, exceptions
-import psycopg2
+from argon2 import PasswordHasher
+from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
 
 
-from app.schemas import UserLoginData, UserRegisterData, UserFullData, Token
-from app.constants import DB_CONN_DATA
+from app.schemas import UserData, User, Token
 import app.constants as const
-from app.constants import SECRET_KEY, ALGORITHM
+from app.database import get_db_session
 
 
 router = APIRouter()
-# variable for authorize users
-# This is an example how to add authorization to endpoint
-#   @app.get('/me')
-#   def get_username(token: Annotated[str, Depends(oauth2_scheme)]) -> dict[str, str]:
-# In tokenUrl you need to write the name of endpoint from which you get the JWT token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-# function for create JWT token with time expiration
 def create_token(payload: dict, minutes_expires : int | None = None) -> str:
-    # don't forget about your timezone
     if minutes_expires:
         time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=minutes_expires)
     else:
         time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=5)
 
-    # add expiration time
     payload.update({'exp': time_available})
-    # make finished JWT token
     token = jwt.encode(payload, const.SECRET_KEY, const.ALGORITHM)
 
     return token
 
 
-def get_username_by_id(id) -> bool:
-    with psycopg2.connect(**DB_CONN_DATA) as connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT username FROM users WHERE id = %s;", (id,))
-            username = cursor.fetchone()[0]
+def verify_user(user: OAuth2PasswordRequestForm, db: Session) -> int | bool:
+    try:
+        user_from_db = db.exec(select(User).where(User.username == user.username)).one()
+    except Exception:
+        return None
 
-            return username
+    if user_from_db.password is None:
+        return None
 
+    ph = PasswordHasher()
+    try:
+        ph.verify(user_from_db.password, user.password)
+    except Exception:
+        return None
 
-def check_user_existence(id: int) -> bool:
-    with psycopg2.connect(**DB_CONN_DATA) as connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT id FROM users WHERE id = %s;", (id,))
-            return bool(cursor.fetchone()[0])
-
-
-# this function check user credentials in db, check length (through schemas)
-# and return the id
-def verify_user(user: UserLoginData) -> int | bool:
-    with psycopg2.connect(**DB_CONN_DATA) as connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT password FROM users WHERE username = %s;", (user.username,))
-            result = cursor.fetchone()
-
-            if isinstance(result, NoneType):
-                return False
-            elif isinstance(result, tuple):
-                correct_password_hash = result[0]
-
-                # passwords is hashed so I need to use password manager
-                ph = PasswordHasher()
-
-                try:
-                    ph.verify(correct_password_hash, user.password)
-                except exceptions.VerifyMismatchError as e:
-                    print(e)
-                    return False
-
-                cursor.execute("SELECT id FROM users WHERE username = %s", (user.username,))
-
-                user_id = cursor.fetchone()[0]
-
-                return user_id
+    return user_from_db.id
 
 
-def verify_token(token: Annotated[str, Depends(oauth2_scheme)]) -> UserFullData:
-    """If token is valid function returns id of user. In other way it raise an error."""
+def verify_token(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db_session)]) -> UserData:
+    """If token is valid function returns user object. In other way it raises an error."""
     unauth_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Your jwt is invalid.",
     )
     try:
-        payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload: dict = jwt.decode(token, const.SECRET_KEY, algorithms=[const.ALGORITHM])
         id = payload.get("sub")
-        if not check_user_existence(id):
+        user: User = db.exec(select(User).where(User.id == id))
+        if not user:
             return unauth_error
     except jwt.InvalidTokenError:
         raise unauth_error
 
-    with psycopg2.connect(**DB_CONN_DATA) as connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE id = %s", (id, ))
-            user_data = cursor.fetchone()
-            user = UserFullData(
-                id = user_data[0],
-                username = user_data[1],
-                password = user_data[2],
-                email = user_data[3],
-            )
-            
-    return user 
+    user_data = user.convert_to_user_data()
+
+    return user_data 
 
 
-# this is the endpoint for login user and give him a token
-# it gets OAuth2PasswordRequestForm schema which already has username and password fields 
-# for authentification its better to use it  
-# Annotated[..., Depends()] is boilerplate
 @router.post('/login') 
-def login(user: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
-    verified_user_id = verify_user(user)
+def login(user: Annotated[OAuth2PasswordRequestForm, Depends()], db: Annotated[Session, Depends(get_db_session)]) -> Token:
+    verified_user_id = verify_user(user, db)
 
-    # if client enter wrong credentials function raise an error
     if not verified_user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
 
-    # create JWT token with user id
     access_token = create_token(
         payload={'sub': str(verified_user_id)},  # subject is the id of user
         minutes_expires=20,
     )
 
-    # return JWT as a pydantic model
     return Token(access_token=access_token, token_type='bearer')
 
 
 @router.post('/register')
-def register(user: UserRegisterData) -> dict[str, dict[str, str]]:
-    with psycopg2.connect(**DB_CONN_DATA) as connection:
-        with connection.cursor() as cursor:
-            ph = PasswordHasher()
-            hashed_password = ph.hash(user.password)
-            try:
-                create_new_user_query = "INSERT INTO users (id, username, password, email) VALUES (nextval('users_id_seq'), %s, %s, %s)"
-                cursor.execute(create_new_user_query, (user.username, hashed_password, user.email))
-            except psycopg2.errors.UniqueViolation as e:
-                duplicate = e.diag.constraint_name
-                if duplicate == 'users_username_key':
-                    raise HTTPException(
-                        status_code=400,
-                        detail="User with this username already exists."
-                    )
-                elif duplicate == 'users_email_key':
-                    raise HTTPException(
-                        status_code=400,
-                        detail="User with this email already exists."
-                    )
+def register(user: UserData, db: Annotated[Session, Depends(get_db_session)]):
+    ph = PasswordHasher()
+    hashed_password = ph.hash(user.password)
 
-            check_new_user_query = "SELECT * FROM users WHERE username = %s"
-            cursor.execute(check_new_user_query, (user.username,))
-            user_data = cursor.fetchone()
-            user_string_data = {
-                "id": str(user_data[0]),
-                "username": str(user_data[1]),
-                "email": str(user_data[2]),
-            }
+    try:
+        user_for_db = User(
+            username=user.username,
+            password=hashed_password,
+            email=user.email
+        )
+        db.add(user_for_db)
+        db.commit()
+    except IntegrityError as e:
+        if 'username' in str(e.orig):
+            raise HTTPException(
+                status_code=400,
+                detail="User with this username already exists."
+            )
+        elif 'email' in str(e.orig):
+            raise HTTPException(
+                status_code=400,
+                detail="User with this email already exists."
+            )
 
-            connection.commit()
-
-            return {'user': user_string_data}
+    user_data = user_for_db.convert_to_user_data()
+    return {'user': user_data}
