@@ -1,6 +1,7 @@
 from typing import Annotated
 from datetime import datetime, timezone, timedelta
 
+
 from fastapi import APIRouter, Depends, HTTPException, status
 import psycopg2
 
@@ -19,6 +20,12 @@ def get_expense_by_id(user: Annotated[UserFullData, Depends(verify_token)], expe
             cursor.execute(get_expense_query, (expense_id, user.id,))
             expense_data = cursor.fetchone()
 
+            if expense_data is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail="You don't have expense with this id."
+                )
+
             owner_id = expense_data[-1]
             get_username_query = "SELECT username FROM users WHERE id = %s"
             cursor.execute(get_username_query, (owner_id,))
@@ -26,10 +33,9 @@ def get_expense_by_id(user: Annotated[UserFullData, Depends(verify_token)], expe
 
             expense_time_created = datetime.fromisoformat(str(expense_data[3]))
             expense_time_created_formatted = expense_time_created.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            print(expense_time_created_formatted)
 
             owner = f"{owner_username}({owner_id})"
-        
+
             expense_full_data = ExpenseFullData(
                 expense_id=expense_data[0],
                 desc=expense_data[1],
@@ -40,6 +46,24 @@ def get_expense_by_id(user: Annotated[UserFullData, Depends(verify_token)], expe
             )
 
             return expense_full_data
+
+
+@router.get('/expenses')
+def get_all_expenses(user: Annotated[UserFullData, Depends(verify_token)]):
+    with psycopg2.connect(**DB_CONN_DATA) as connection:
+        with connection.cursor() as cursor:
+            find_all_expenses_query = "SELECT id, description, amount, time_created, category FROM expenses WHERE user_id = %s"
+            cursor.execute(find_all_expenses_query, (user.id, ))
+    
+            expenses = cursor.fetchall()
+            expense_id = 0
+
+            while expense_id < len(expenses):
+                expenses[expense_id] = list(expenses[expense_id])
+                expenses[expense_id][3] = str(datetime.fromisoformat(str(expenses[expense_id][3])))
+                expense_id += 1
+
+            return expenses
 
 
 @router.post('/expense')
