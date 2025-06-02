@@ -23,7 +23,7 @@ def get_expense_by_id(user: Annotated[UserFullData, Depends(verify_token)], expe
             if expense_data is None:
                 raise HTTPException(
                     status_code=404,
-                    detail="You don't have expense with this id."
+                    detail="You don't have the expense with this id."
                 )
 
             owner_id = expense_data[-1]
@@ -49,7 +49,7 @@ def get_expense_by_id(user: Annotated[UserFullData, Depends(verify_token)], expe
 
 
 @router.get('/expenses')
-def get_all_expenses(user: Annotated[UserFullData, Depends(verify_token)]):
+def get_all_expenses(user: Annotated[UserFullData, Depends(verify_token)]) -> list[list[int | str]]:
     with psycopg2.connect(**DB_CONN_DATA) as connection:
         with connection.cursor() as cursor:
             find_all_expenses_query = "SELECT id, description, amount, time_created, category FROM expenses WHERE user_id = %s"
@@ -100,3 +100,30 @@ def create_expense(user: Annotated[UserFullData, Depends(verify_token)], expense
             connection.commit()
 
     return {'result': expense_id}
+
+
+@router.put('/expense/{expense_id}')
+def update_expense(user: Annotated[UserFullData, Depends(verify_token)], expense_id):
+    with psycopg2.connect(**DB_CONN_DATA) as connection:
+        with connection.cursor() as cursor:
+            return
+
+
+@router.delete('/expense/{expense_id}', status_code=status.HTTP_204_NO_CONTENT)
+def remove_expense(user: Annotated[UserFullData, Depends(verify_token)], expense_id: int):
+    with psycopg2.connect(**DB_CONN_DATA) as connection:
+        with connection.cursor() as cursor:
+            check_expense_exist_query = "SELECT 1 FROM expenses WHERE id = %s AND user_id = %s"
+            cursor.execute(check_expense_exist_query, (expense_id, user.id))
+            if cursor.fetchone() is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail="You don't have the expense with this id."
+                )
+
+            remove_expense_query = "DELETE FROM expenses WHERE id = %s"
+            cursor.execute(remove_expense_query, (expense_id, ))
+
+            connection.commit()
+
+            return 
