@@ -15,10 +15,15 @@ class UserData(BaseModel):
 
 class ExpenseData(BaseModel):
     id: None | int = None
-    desc: str
+    description: str
     amount: float
     time_created: None | str = None
     category: None | str = None
+
+
+class ExpenseDataModifid(ExpenseData):
+    description: None | str = None
+    amount: None | float = None
 
 
 class Token(BaseModel):

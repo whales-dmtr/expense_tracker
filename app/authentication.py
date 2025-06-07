@@ -48,7 +48,9 @@ def verify_user(user: OAuth2PasswordRequestForm, db: Session) -> int | bool:
     return user_from_db.id
 
 
-def verify_token(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db_session)]) -> UserData:
+def verify_token(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        db: Annotated[Session, Depends(get_db_session)]) -> UserData:
     """If token is valid function returns user object. In other way it raises an error."""
     unauth_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -57,7 +59,7 @@ def verify_token(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Se
     try:
         payload: dict = jwt.decode(token, const.SECRET_KEY, algorithms=[const.ALGORITHM])
         id = payload.get("sub")
-        user: User = db.exec(select(User).where(User.id == id))
+        user: User = db.exec(select(User).where(User.id == id)).one()
         if not user:
             return unauth_error
     except jwt.InvalidTokenError:
@@ -69,7 +71,9 @@ def verify_token(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Se
 
 
 @router.post('/login') 
-def login(user: Annotated[OAuth2PasswordRequestForm, Depends()], db: Annotated[Session, Depends(get_db_session)]) -> Token:
+def login(
+        user: Annotated[OAuth2PasswordRequestForm, Depends()], 
+        db: Annotated[Session, Depends(get_db_session)]) -> Token:
     verified_user_id = verify_user(user, db)
 
     if not verified_user_id:
