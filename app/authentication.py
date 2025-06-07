@@ -22,7 +22,7 @@ def create_token(payload: dict, minutes_expires : int | None = None) -> str:
     if minutes_expires:
         time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=minutes_expires)
     else:
-        time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=5)
+        time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=const.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     payload.update({'exp': time_available})
     token = jwt.encode(payload, const.SECRET_KEY, const.ALGORITHM)
