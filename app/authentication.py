@@ -18,11 +18,13 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-def create_token(payload: dict, minutes_expires : int | None = None) -> str:
+def create_token(payload: dict, minutes_expires: int | None = None) -> str:
     if minutes_expires:
-        time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=minutes_expires)
+        time_available = datetime.now(
+            timezone(timedelta(hours=3))) + timedelta(minutes=minutes_expires)
     else:
-        time_available = datetime.now(timezone(timedelta(hours=3))) + timedelta(minutes=const.ACCESS_TOKEN_EXPIRE_MINUTES)
+        time_available = datetime.now(timezone(
+            timedelta(hours=3))) + timedelta(minutes=const.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     payload.update({'exp': time_available})
     token = jwt.encode(payload, const.SECRET_KEY, const.ALGORITHM)
@@ -32,7 +34,8 @@ def create_token(payload: dict, minutes_expires : int | None = None) -> str:
 
 def verify_user(user: OAuth2PasswordRequestForm, db: Session) -> int | bool:
     try:
-        user_from_db = db.exec(select(User).where(User.username == user.username)).one()
+        user_from_db = db.exec(select(User).where(
+            User.username == user.username)).one()
     except Exception:
         return None
 
@@ -57,7 +60,8 @@ def verify_token(
         detail="Your jwt is invalid.",
     )
     try:
-        payload: dict = jwt.decode(token, const.SECRET_KEY, algorithms=[const.ALGORITHM])
+        payload: dict = jwt.decode(
+            token, const.SECRET_KEY, algorithms=[const.ALGORITHM])
         id = payload.get("sub")
         user: User = db.exec(select(User).where(User.id == id)).one()
         if not user:
@@ -67,12 +71,12 @@ def verify_token(
 
     user_data = user.convert_to_user_data()
 
-    return user_data 
+    return user_data
 
 
-@router.post('/login') 
+@router.post('/login')
 def login(
-        user: Annotated[OAuth2PasswordRequestForm, Depends()], 
+        user: Annotated[OAuth2PasswordRequestForm, Depends()],
         db: Annotated[Session, Depends(get_db_session)]) -> Token:
     verified_user_id = verify_user(user, db)
 

@@ -14,10 +14,10 @@ router = APIRouter()
 
 @router.get('/expense/{expense_id}')
 def get_expense_by_id(
-        user: Annotated[UserData, Depends(verify_token)], 
-        db: Annotated[Session, Depends(get_db_session)], 
+        user: Annotated[UserData, Depends(verify_token)],
+        db: Annotated[Session, Depends(get_db_session)],
         expense_id: int) -> ExpenseData:
-    expense = db.exec(select(Expense).where(Expense.id == expense_id, 
+    expense = db.exec(select(Expense).where(Expense.id == expense_id,
                                             Expense.user_id == user.id)).one()
 
     if expense is None:
@@ -27,7 +27,8 @@ def get_expense_by_id(
         )
 
     expense_time_created = datetime.fromisoformat(str(expense.time_created))
-    expense_time_created_formatted = expense_time_created.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    expense_time_created_formatted = expense_time_created.strftime(
+        "%Y-%m-%d %H:%M:%S.%f")[:-3]
 
     expense_full_data = ExpenseData(
         id=expense.id,
@@ -42,25 +43,27 @@ def get_expense_by_id(
 
 @router.get('/expenses')
 def get_all_expenses(
-        user: Annotated[UserData, Depends(verify_token)], 
+        user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)]):
     expenses = db.exec(select(Expense).where(Expense.user_id == user.id)).all()
 
     for expense in expenses:
-        expense_time_created_formatted = str(datetime.fromisoformat(str(expense.time_created)))
+        expense_time_created_formatted = str(
+            datetime.fromisoformat(str(expense.time_created)))
         expense.time_created = expense_time_created_formatted
-    
+
     return expenses
 
 
 @router.post('/expense')
 def create_expense(
-        user: Annotated[UserData, Depends(verify_token)], 
-        db: Annotated[Session, Depends(get_db_session)], 
+        user: Annotated[UserData, Depends(verify_token)],
+        db: Annotated[Session, Depends(get_db_session)],
         expense: ExpenseData):
-    time_created = expense.time_created or str(datetime.now(timezone(timedelta(hours=3))))
+    time_created = expense.time_created or str(
+        datetime.now(timezone(timedelta(hours=3))))
     category = expense.category or 'Others'
-            
+
     expense_for_db = Expense(
         description=expense.description,
         amount=expense.amount,
@@ -76,11 +79,12 @@ def create_expense(
 
 @router.put('/expense/{expense_id}')
 def update_expense(
-        user: Annotated[UserData, Depends(verify_token)], 
+        user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)], expense_id,
         modified_expense_data: ExpenseDataModifid):
 
-    modified_expense = db.exec(select(Expense).where(Expense.id == expense_id)).one()    
+    modified_expense = db.exec(
+        select(Expense).where(Expense.id == expense_id)).one()
 
     if not modified_expense:
         raise HTTPException(
@@ -108,9 +112,9 @@ def update_expense(
 
 @router.delete('/expense/{expense_id}', status_code=status.HTTP_204_NO_CONTENT)
 def remove_expense(
-        user: Annotated[UserData, Depends(verify_token)], 
+        user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)], expense_id: int):
-    check_expense_exist_query = select(Expense).where(Expense.id == expense_id, 
+    check_expense_exist_query = select(Expense).where(Expense.id == expense_id,
                                                       Expense.user_id == user.id)
     expense = db.exec(check_expense_exist_query).one()
 
@@ -123,4 +127,4 @@ def remove_expense(
     db.delete(expense)
     db.commit()
 
-    return 
+    return
