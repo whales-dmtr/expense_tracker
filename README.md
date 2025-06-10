@@ -1,13 +1,14 @@
 # Expense Tracker
 
-## Python REST API to manage and track your expenses, built with FastAPI
+## Python REST API to managing and tracking your expenses, built with FastAPI
 
 This project is a simple and secure REST API that allows you to manage your expenses, track your spending, and identify where your money goes most often. Below are some of the main features:
 
-- Password hashing system  
-- Authorization and authentication with JWT tokens  
-- Full CRUD operations to manage your expenses  
-- Search expenses by description text  
+- Secure password hashing  
+- JWT-based authentication and authorization  
+- Full CRUD support for managing expenses  
+- Search expenses by text or regular expressions
+
 
 ---
 
@@ -15,8 +16,8 @@ This project is a simple and secure REST API that allows you to manage your expe
 
 ### 🔐 Authentication
 
-- `POST /login` — Authenticate a user and receive a JWT token.  
-- `POST /register` — Register a new user.
+- `POST /auth/login` — Authenticate a user and receive a JWT token.  
+- `POST /auth/register` — Register a new user.
 
 ### 👤 User
 
@@ -30,12 +31,13 @@ This project is a simple and secure REST API that allows you to manage your expe
 - `PUT /expense/{expense_id}` — Update an existing expense by ID. *(Requires authentication)*  
 - `DELETE /expense/{expense_id}` — Delete a specific expense by ID. *(Requires authentication)*  
 - `GET /expenses/search?query=...` — Search expenses by words in their description. *(Requires authentication)*
+- `GET /expenses/search/regex?pattern=...&flags=...` - Search expenses by regular expression. *(Requires authentication)*
 
 ---
 
 ## 📚 API Documentation
 
-Interactive API documentation is available at:
+Interactive documentation is available when the API is running locally:
 
 - **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)  
 - **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
