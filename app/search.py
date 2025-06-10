@@ -12,19 +12,24 @@ from app.authentication import verify_token
 router = APIRouter(tags=['Expenses', 'Search'])
 
 
-def sort_expenses_by_priority(expenses: list) -> list:
+def sort_expenses_by_matches(expenses: list) -> list:
     result = []
 
-    priorities = []
+    matches = []
     for id, priority in expenses:
-        priorities.append(priority)
+        matches.append(priority)
 
     while expenses != []:
-        highest_priority_id = priorities.index(max(priorities))
-        result.append(expenses[highest_priority_id])
+        highest_priority_idx = matches.index(max(matches))
+        expense_data = {
+            'id': expenses[highest_priority_idx][0].id,
+            'description': expenses[highest_priority_idx][0].description,
+            'matches': expenses[highest_priority_idx][1]
+        }
+        result.append(expense_data)
 
-        del expenses[highest_priority_id]
-        del priorities[highest_priority_id]
+        del expenses[highest_priority_idx]
+        del matches[highest_priority_idx]
 
     return result
 
@@ -59,21 +64,16 @@ def search_expenses(
         db: Annotated[Session, Depends(get_db_session)],
         query: str):
     expenses = db.exec(
-        select(Expense.id, Expense.description).where(Expense.user_id == user.id)).all()
+        select(Expense).where(Expense.user_id == user.id)).all()
     appropriate_expenses = []
 
-    for id, desc in expenses:
-        priority = desc.count(query)
+    for expense in expenses:
+        priority = expense.description.count(query)
         if priority > 0:
-            appropriate_expenses.append((id, priority))
+            appropriate_expenses.append((expense, priority))
 
-    sorted_expenses_by_priority = sort_expenses_by_priority(
+    expenses_data = sort_expenses_by_matches(
         appropriate_expenses)
-
-    expenses_data = []
-    for id, _ in sorted_expenses_by_priority:
-        expense = db.exec(select(Expense).where(Expense.id == id)).one()
-        expenses_data.append(expense)
 
     return expenses_data
 
@@ -84,7 +84,7 @@ def search_expenses_by_regex(
         db: Annotated[Session, Depends(get_db_session)],
         pattern: str, flags: str = 'g'):
     expenses = db.exec(
-        select(Expense.id, Expense.description).where(Expense.user_id == user.id)).all()
+        select(Expense).where(Expense.user_id == user.id)).all()
     appropriate_expenses = []
 
     compiled_flags, is_global = convert_flags(flags)
@@ -95,18 +95,12 @@ def search_expenses_by_regex(
             status_code=400, detail=f"Invalid regex pattern: {e}")
 
     if is_global:
-        for id, desc in expenses:
-            priority = len(re.findall(pattern, desc))
+        for expense in expenses:
+            priority = len(re.findall(pattern, expense.description))
             if priority:
-                appropriate_expenses.append((id, priority))
-        sorted_expenses_by_priority = sort_expenses_by_priority(
+                appropriate_expenses.append((expense, priority))
+        expenses_data = sort_expenses_by_matches(
             appropriate_expenses)
-
-        expenses_data = []
-        for id, _ in sorted_expenses_by_priority:
-            expense = db.exec(
-                select(Expense).where(Expense.id == id)).one()
-            expenses_data.append(expense)
 
         return expenses_data
     else:
