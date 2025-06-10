@@ -16,6 +16,6 @@ app.include_router(expenses.router)
 app.include_router(search.router)
 
 
-@app.get('/me')
+@app.get('/me', tags=['User'], summary="Get your username")
 def get_username(user: Annotated[UserData, Depends(verify_token)]) -> dict[str, str]:
     return {'your_username': user.username}

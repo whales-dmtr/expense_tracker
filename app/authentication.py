@@ -14,8 +14,8 @@ import app.constants as const
 from app.database import get_db_session
 
 
-router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+router = APIRouter(tags=['Authentication'])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
 def create_token(payload: dict, minutes_expires: int | None = None) -> str:
@@ -74,7 +74,7 @@ def verify_token(
     return user_data
 
 
-@router.post('/login')
+@router.post('/auth/login', summary="Authenticate user")
 def login(
         user: Annotated[OAuth2PasswordRequestForm, Depends()],
         db: Annotated[Session, Depends(get_db_session)]) -> Token:
@@ -94,7 +94,7 @@ def login(
     return Token(access_token=access_token, token_type='bearer')
 
 
-@router.post('/register')
+@router.post('/auth/register', summary='Register a new user')
 def register(user: UserData, db: Annotated[Session, Depends(get_db_session)]):
     ph = PasswordHasher()
     hashed_password = ph.hash(user.password)

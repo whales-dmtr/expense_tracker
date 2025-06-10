@@ -9,10 +9,10 @@ from app.authentication import verify_token
 from app.schemas import UserData, ExpenseData, ExpenseDataModifid, Expense
 from app.database import get_db_session
 
-router = APIRouter()
+router = APIRouter(tags=['Expenses'])
 
 
-@router.get('/expense/{expense_id}')
+@router.get('/expense/{expense_id}', summary="Get expense by ID")
 def get_expense_by_id(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)],
@@ -41,7 +41,7 @@ def get_expense_by_id(
     return expense_full_data
 
 
-@router.get('/expenses')
+@router.get('/expenses', summary="List all expenses")
 def get_all_expenses(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)]):
@@ -55,7 +55,7 @@ def get_all_expenses(
     return expenses
 
 
-@router.post('/expense')
+@router.post('/expense', summary="Create a new expense")
 def create_expense(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)],
@@ -77,7 +77,7 @@ def create_expense(
     return {'result': expense_for_db.id}
 
 
-@router.put('/expense/{expense_id}')
+@router.put('/expense/{expense_id}', summary="Update an expense")
 def update_expense(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)], expense_id,
@@ -110,7 +110,7 @@ def update_expense(
     return {"Updated expense id": modified_expense.id}
 
 
-@router.delete('/expense/{expense_id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/expense/{expense_id}', status_code=status.HTTP_204_NO_CONTENT, summary="Delete an expense")
 def remove_expense(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)], expense_id: int):

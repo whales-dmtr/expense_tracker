@@ -9,7 +9,7 @@ from app.database import get_db_session
 from app.schemas import Expense, UserData
 from app.authentication import verify_token
 
-router = APIRouter()
+router = APIRouter(tags=['Expenses', 'Search'])
 
 
 def sort_expenses_by_priority(expenses: list) -> list:
@@ -53,7 +53,7 @@ def convert_flags(flags: str) -> tuple[int, bool]:
     return (python_flags, is_global)
 
 
-@router.get('/expenses/search')
+@router.get('/expenses/search', summary="Search expenses by description")
 def search_expenses(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)],
@@ -78,7 +78,7 @@ def search_expenses(
     return expenses_data
 
 
-@router.get('/expenses/search/regex')
+@router.get('/expenses/search/regex', summary="Search expenses by regex")
 def search_expenses_by_regex(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)],
