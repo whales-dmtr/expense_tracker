@@ -1,6 +1,3 @@
-from typing import Annotated
-
-from fastapi import Depends
 from sqlmodel import Session, create_engine
 
 from app.constants import SQLALCHEMY_DATABASE_URL
