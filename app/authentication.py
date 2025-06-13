@@ -9,7 +9,8 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
-from app.schemas import UserData, User, Token
+from app.schemas import UserData, Token
+from app.models import User
 import app.constants as const
 from app.database import get_db_session
 

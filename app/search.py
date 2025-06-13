@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 
 from app.database import get_db_session
-from app.schemas import Expense, UserData
+from app.schemas import UserData
+from app.models import Expense
 from app.authentication import verify_token
 
 router = APIRouter(tags=['Expenses', 'Search'])

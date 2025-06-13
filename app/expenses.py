@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select, Session
 
 from app.authentication import verify_token
-from app.schemas import UserData, ExpenseData, ExpenseDataModifid, Expense
+from app.schemas import UserData, ExpenseData, ExpenseDataModified
+from app.models import Expense
 from app.database import get_db_session
 
 router = APIRouter(tags=['Expenses'])
@@ -81,7 +82,7 @@ def create_expense(
 def update_expense(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)], expense_id,
-        modified_expense_data: ExpenseDataModifid):
+        modified_expense_data: ExpenseDataModified):
 
     modified_expense = db.exec(
         select(Expense).where(Expense.id == expense_id)).one()
