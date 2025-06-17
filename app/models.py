@@ -33,10 +33,10 @@ class User(SQLModel, table=True):
 class Expense(SQLModel, table=True):
     __tablename__ = 'expenses'
 
-    id: Optional[int] = Field(
+    id: int = Field(
         default=expenses_id_seq.next_value(), primary_key=True)
     description: str = Field(min_length=1, max_length=50, nullable=False)
     amount: float = Field(gt=0, nullable=False)
     time_created: datetime = Field(nullable=False)
-    category: str = Field(min_length=6, max_length=11)
+    category: str = Field(min_length=6, max_length=11, nullable=False)
     user_id: int = Field(foreign_key="users.id")
