@@ -2,8 +2,6 @@
 **/*.py[cod]
 
 venv/
-**/.env
-**/.env.local
 **/.python-version
 
 *.log
