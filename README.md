@@ -1,43 +1,111 @@
-# Expense Tracker
+# 💰 Expense Tracker
 
-## Python REST API to managing and tracking your expenses, built with FastAPI
+## Python REST API for managing and tracking your expenses — built with FastAPI, Docker, and Alembic
 
-This project is a simple and secure REST API that allows you to manage your expenses, track your spending, and identify where your money goes most often. Below are some of the main features:
-
-- Secure password hashing  
-- JWT-based authentication and authorization  
-- Full CRUD support for managing expenses  
-- Search expenses by text or regular expressions
-
+This project provides a simple, secure, and extensible REST API to manage personal expenses.  
+You can track your spending habits, store expenses, and search them with flexible filtering (including regex support).
 
 ---
 
-## API Endpoints
+## 🚀 Features
+
+- 🔐 Secure password hashing  
+- 🪪 JWT-based authentication and authorization  
+- ✅ Full CRUD support for expenses  
+- 🔍 Search expenses by text or regular expressions  
+- 🐳 Dockerized environment with auto-applied Alembic migrations  
+
+---
+
+## 🧪 Installation & Usage (Docker Compose)
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/your-username/expense-tracker.git
+cd expense-tracker
+```
+
+### 2. Create .env file
+
+Copy the example .env.example or create manually:
+
+```env
+# .env
+DB_NAME=expense_tracker
+DB_USER=mysuperuser
+DB_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
+
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=10
+```
+### 3. Run with Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+----
+## 📚 API Documentation
+
+Interactive documentation available when the server is running:
+
+- 🔹 Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)  
+- 🔹 ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+---
+
+## 📦 API Endpoints Overview
 
 ### 🔐 Authentication
 
-- `POST /auth/login` — Authenticate a user and receive a JWT token.  
-- `POST /auth/register` — Register a new user.
+- `POST /auth/register` — Register a new user  
+- `POST /auth/login` — Authenticate and receive JWT token  
 
 ### 👤 User
 
-- `GET /me` — Get details of the authenticated user. *(Requires authentication)*
+- `GET /me` — Retrieve authenticated user details  
 
 ### 💸 Expenses
 
-- `GET /expense/{expense_id}` — Retrieve a specific expense by ID. *(Requires authentication)*  
-- `GET /expenses` — Retrieve all expenses for the authenticated user. *(Requires authentication)*  
-- `POST /expense` — Create a new expense. *(Requires authentication)*  
-- `PUT /expense/{expense_id}` — Update an existing expense by ID. *(Requires authentication)*  
-- `DELETE /expense/{expense_id}` — Delete a specific expense by ID. *(Requires authentication)*  
-- `GET /expenses/search?query=...` — Search expenses by words in their description. *(Requires authentication)*
-- `GET /expenses/search/regex?pattern=...&flags=...` - Search expenses by regular expression. *(Requires authentication)*
+- `GET /expense/{expense_id}` — Get specific expense  
+- `GET /expenses` — List all expenses  
+- `POST /expense` — Add a new expense  
+- `PUT /expense/{expense_id}` — Update an existing expense  
+- `DELETE /expense/{expense_id}` — Delete an expense  
+- `GET /expenses/search?query=...` — Search by text  
+- `GET /expenses/search/regex?pattern=...&flags=...` — Search by regex  
 
----
+## 🧩 Tech Stack
 
-## 📚 API Documentation
+- **Backend**: FastAPI, Pydantic, SQLAlchemy  
+- **Database**: PostgreSQL  
+- **Auth**: JWT (JSON Web Tokens)  
+- **Migrations**: Alembic  
+- **Containerization**: Docker & Docker Compose  
 
-Interactive documentation is available when the API is running locally:
+## 🛠️ Development
 
-- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)  
-- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+For local development without Docker, install dependencies and run manually:
+
+```bash
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+alembic upgrade head
+
+# Start the application
+uvicorn app.main:app --reload
+```
+
+## 📝 License
+
+MIT — do whatever you want but don’t blame me :)
