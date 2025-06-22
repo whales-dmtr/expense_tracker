@@ -89,7 +89,7 @@ Interactive documentation available when the server is running:
 
 ## 🛠️ Development
 
-For local development without Docker, install dependencies and run manually:
+For local development without Docker, install dependencies and run manually (but you need to have running database and .env file for it):
 
 ```bash
 # Create and activate virtual environment
