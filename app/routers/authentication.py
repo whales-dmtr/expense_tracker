@@ -2,11 +2,12 @@ from typing import Annotated
 from datetime import timedelta, datetime, timezone
 
 import jwt
+from jwt import InvalidTokenError
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from argon2 import PasswordHasher
 from sqlmodel import Session, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
 
 from app.schemas import UserData, Token
@@ -67,7 +68,9 @@ def verify_token(
         user: User = db.exec(select(User).where(User.id == id)).one()
         if not user:
             return unauth_error
-    except jwt.InvalidTokenError:
+    except InvalidTokenError:
+        raise unauth_error
+    except NoResultFound:
         raise unauth_error
 
     user_data = user.convert_to_user_data()

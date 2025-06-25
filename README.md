@@ -68,6 +68,7 @@ Interactive documentation available when the server is running:
 ### 👤 User
 
 - `GET /me` — Retrieve authenticated user details  
+- `DELETE /me` — Remove authenticated user and all his expenses
 
 ### 💸 Expenses
 
