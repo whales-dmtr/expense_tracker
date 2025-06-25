@@ -5,10 +5,10 @@ from sqlmodel import Session, select
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 
-from app.database import get_db_session
+from app.db.database import get_db_session
 from app.schemas import UserData
-from app.models import Expense
-from app.authentication import verify_token
+from app.db.models import Expense
+from app.routers.authentication import verify_token
 
 router = APIRouter(tags=['Expenses', 'Search'])
 

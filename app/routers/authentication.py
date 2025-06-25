@@ -10,9 +10,9 @@ from sqlalchemy.exc import IntegrityError
 
 
 from app.schemas import UserData, Token
-from app.models import User
+from app.db.models import User
 import app.constants as const
-from app.database import get_db_session
+from app.db.database import get_db_session
 
 
 router = APIRouter(tags=['Authentication'])

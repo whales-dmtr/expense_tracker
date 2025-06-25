@@ -5,10 +5,10 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select, Session
 
-from app.authentication import verify_token
+from app.routers.authentication import verify_token
 from app.schemas import UserData, ExpenseData, ExpenseDataModified
-from app.models import Expense
-from app.database import get_db_session
+from app.db.models import Expense
+from app.db.database import get_db_session
 
 router = APIRouter(tags=['Expenses'])
 
