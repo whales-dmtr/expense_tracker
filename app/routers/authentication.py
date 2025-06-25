@@ -56,7 +56,8 @@ def verify_user(user: OAuth2PasswordRequestForm, db: Session) -> int | bool:
 def verify_token(
         token: Annotated[str, Depends(oauth2_scheme)],
         db: Annotated[Session, Depends(get_db_session)]) -> UserData:
-    """If token is valid function returns user object. In other way it raises an error."""
+    # If token is valid function returns user object. 
+    # In other way it raises an error.
     unauth_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Your jwt is invalid.",

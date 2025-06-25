@@ -3,6 +3,7 @@
 
 venv/
 **/.env
+**/.env.test
 **/.env.local
 **/.python-version
 
@@ -17,3 +18,6 @@ uvicorn.log
 **/.obsidian/
 
 **/.DS_Store
+
+*.pytest_cache/
+.coverage

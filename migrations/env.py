@@ -6,12 +6,16 @@ from sqlalchemy import pool
 from alembic import context
 from sqlmodel import SQLModel
 from app.constants import SQLALCHEMY_DATABASE_URL
-from app.models import User, Expense
+from app.db.models import User, Expense
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option('sqlalchemy.url', SQLALCHEMY_DATABASE_URL)
+# This if statement added for test db
+# because I use same migrations for main db and test db
+if config.get_main_option("sqlalchemy.url") == \
+        'driver://user:pass@localhost/dbname':
+    config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
