@@ -107,6 +107,25 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
+### ✅ Running Tests
+
+After adding or modifying a feature, **make sure to run tests** to verify that the application's functionality is not broken:
+
+```bash
+pytest
+```
+
+Tests require a **separate test database** to run correctly.  
+Before running tests, create a test database manually (e.g. `expense_tracker_test`) and add a `.env.test` file in the root directory:
+
+```env
+# .env.test
+TEST_DB_URL=postgresql+asyncpg://test_user:test_password@localhost:5432/expense_tracker_test
+```
+
+> You can change the URL according to your environment or Docker test setup.
+
+
 ## 📝 License
 
 MIT — do whatever you want but don’t blame me :)
