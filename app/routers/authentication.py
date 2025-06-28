@@ -18,6 +18,7 @@ from app.db.database import get_db_session
 
 router = APIRouter(tags=['Authentication'])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+ph = PasswordHasher()
 
 
 def create_token(payload: dict, minutes_expires: int | None = None) -> str:
@@ -44,7 +45,6 @@ def verify_user(user: OAuth2PasswordRequestForm, db: Session) -> int | bool:
     if user_from_db.password is None:
         return None
 
-    ph = PasswordHasher()
     try:
         ph.verify(user_from_db.password, user.password)
     except Exception:
@@ -101,7 +101,6 @@ def login(
 
 @router.post('/auth/register', summary='Register a new user')
 def register(user: UserData, db: Annotated[Session, Depends(get_db_session)]):
-    ph = PasswordHasher()
     hashed_password = ph.hash(user.password)
 
     try:

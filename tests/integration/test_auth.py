@@ -16,8 +16,8 @@ def test_register():
 
     data = {
         "id": 0,
-        "username": "bob",
-        "email": "bob@example.com",
+        "username": "user",
+        "email": "user@example.com",
         "password": "1234"
     }
 
@@ -36,7 +36,7 @@ def test_login():
     }
 
     data = {
-        'username': 'bob',
+        'username': 'user',
         'password': '1234',
     }
 
@@ -58,4 +58,4 @@ def test_auth(access_token):
 
 def test_deleted_user(database: Session):
     with pytest.raises(NoResultFound):
-        database.exec(select(User).where(User.username == 'bob')).one()
+        database.exec(select(User).where(User.username == 'user')).one()

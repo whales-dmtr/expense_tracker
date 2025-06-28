@@ -47,7 +47,7 @@ def access_token():
     }
 
     data = {
-        'username': 'bob',
+        'username': 'user',
         'password': '1234',
     }
 
