@@ -1,7 +1,7 @@
 **/__pycache__/
 **/*.py[cod]
 
-venv/
+**/*venv*
 **/.env
 **/.env.test
 **/.env.local
