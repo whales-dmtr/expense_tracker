@@ -1,7 +1,8 @@
 **/__pycache__/
 **/*.py[cod]
 
-venv/
+**/*venv*
+.env.example
 **/.python-version
 
 *.log
@@ -18,7 +19,9 @@ uvicorn.log
 
 .git
 .gitignore
-database_example.sql
 **/*.md
-.env.example
 Dockerfile
+
+*.pytest_cache/
+.coverage
+htmlcov/index.html

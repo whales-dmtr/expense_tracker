@@ -21,3 +21,4 @@ uvicorn.log
 
 *.pytest_cache/
 .coverage
+htmlcov

@@ -36,4 +36,4 @@ def remove_user(
 
     db.commit()
 
-    return {'user ID': user_id, 'expenses_quantity': len(user_expenses)}
+    return {'user_id': user_id, 'expenses_quantity': len(user_expenses)}
