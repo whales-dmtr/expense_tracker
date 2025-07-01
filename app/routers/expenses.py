@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select, Session
+from sqlalchemy.exc import NoResultFound
 
 from app.routers.authentication import verify_token
 from app.schemas import UserData, ExpenseData, ExpenseDataModified
@@ -18,10 +19,10 @@ def get_expense_by_id(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)],
         expense_id: int) -> ExpenseData:
-    expense = db.exec(select(Expense).where(Expense.id == expense_id,
-                                            Expense.user_id == user.id)).one()
-
-    if expense is None:
+    try:
+        expense = db.exec(select(Expense).where(Expense.id == expense_id,
+            Expense.user_id == user.id)).one()
+    except NoResultFound:
         raise HTTPException(
             status_code=404,
             detail="You don't have the expense with this id."
@@ -45,12 +46,13 @@ def get_expense_by_id(
 @router.get('/expenses', summary="List all expenses")
 def get_all_expenses(
         user: Annotated[UserData, Depends(verify_token)],
-        db: Annotated[Session, Depends(get_db_session)]):
+        db: Annotated[Session, Depends(get_db_session)]) -> list[ExpenseData]:
     expenses = db.exec(select(Expense).where(Expense.user_id == user.id)).all()
 
     for expense in expenses:
-        expense_time_created_formatted = str(
-            datetime.fromisoformat(str(expense.time_created)))
+        expense_time_created = datetime.fromisoformat(str(expense.time_created))
+        expense_time_created_formatted = expense_time_created.strftime(
+            "%Y-%m-%d %H:%M:%S.%f")[:-3]
         expense.time_created = expense_time_created_formatted
 
     return expenses
@@ -83,11 +85,10 @@ def update_expense(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)], expense_id,
         modified_expense_data: ExpenseDataModified):
-
-    modified_expense = db.exec(
-        select(Expense).where(Expense.id == expense_id)).one()
-
-    if not modified_expense:
+    try:
+        modified_expense = db.exec(
+            select(Expense).where(Expense.id == expense_id)).one()
+    except NoResultFound:
         raise HTTPException(
             status_code=404,
             detail="No expense with this id was found."
@@ -117,9 +118,9 @@ def remove_expense(
         db: Annotated[Session, Depends(get_db_session)], expense_id: int):
     check_expense_exist_query = select(Expense).where(Expense.id == expense_id,
                                                       Expense.user_id == user.id)
-    expense = db.exec(check_expense_exist_query).one()
-
-    if expense is None:
+    try:
+        expense = db.exec(check_expense_exist_query).one()
+    except NoResultFound:
         raise HTTPException(
             status_code=404,
             detail="You don't have the expense with this id."

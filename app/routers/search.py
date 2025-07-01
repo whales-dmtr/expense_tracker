@@ -63,7 +63,7 @@ def convert_flags(flags: str) -> tuple[int, bool]:
 def search_expenses(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)],
-        query: str):
+        query: str) -> list:
     expenses = db.exec(
         select(Expense).where(Expense.user_id == user.id)).all()
     appropriate_expenses = []
@@ -85,7 +85,8 @@ def search_expenses_by_regex(
         db: Annotated[Session, Depends(get_db_session)],
         pattern: str, flags: str = 'g'):
     expenses = db.exec(
-        select(Expense).where(Expense.user_id == user.id)).all()
+        select(Expense.id, Expense.description).where(Expense.user_id == \
+                                                      user.id)).all()
     appropriate_expenses = []
 
     compiled_flags, is_global = convert_flags(flags)

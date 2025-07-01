@@ -19,7 +19,9 @@ class ExpenseData(BaseModel):
 class ExpenseDataModified(ExpenseData):
     description: None | str = None
     amount: None | float = None
-
+    time_created: None | str = None
+    category: None | str = None
+    
 
 class Token(BaseModel):
     access_token: str

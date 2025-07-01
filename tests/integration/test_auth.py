@@ -39,8 +39,9 @@ def login(username, password):
 
 
 def authorize(token):
-    headers = { "Authorization": f"Bearer {token}" }
-    response = client.get('/me', headers=headers)
+    if type(token) == str:
+        token = {"Authorization": f"Bearer {token}"}
+    response = client.get('/me', headers=token)
     return response.status_code
 
 

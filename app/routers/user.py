@@ -21,16 +21,12 @@ def get_username(user: Annotated[UserData, Depends(verify_token)]):
 def remove_user(
         user: Annotated[UserData, Depends(verify_token)],
         db: Annotated[Session, Depends(get_db_session)]):
-    user_id = db.exec(select(User.id).where(
-        User.username == user.username)).one()
-    try:
-        user_expenses = db.exec(select(Expense).where(
-            Expense.user_id == user_id)).all()
-        for exp in user_expenses:
-            db.delete(exp)
-    except NoResultFound:
-        pass
-
+    user_id = db.exec(select(User.id).where(User.username == \
+                                            user.username)).one()
+    user_expenses = db.exec(select(Expense).where(Expense.user_id == \
+                                                  user_id)).all()
+    for exp in user_expenses:
+        db.delete(exp)
     user_in_db = db.exec(select(User).where(User.id == user_id)).one()
     db.delete(user_in_db)
 

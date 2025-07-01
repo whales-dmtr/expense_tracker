@@ -1,0 +1,5 @@
+[run]
+omit =
+    migrations/env.py
+    migrations/versions/*
+    app/db/database.py

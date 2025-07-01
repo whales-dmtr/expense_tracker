@@ -116,7 +116,7 @@ pytest
 ```
 
 Tests require a **separate test database** to run correctly.  
-Before running tests, create a test database manually (e.g. `expense_tracker_test`) and add a `.env.test` file in the root directory:
+Before running tests, create a test database manually (e.g. `expense_tracker_test`) and add a `.env.test` file in the root directory it should consist of one variable TEST_DB_URL with url for your test database:
 
 ```env
 # .env.test
