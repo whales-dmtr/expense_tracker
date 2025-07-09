@@ -16,7 +16,7 @@ services:
       - backend
 
   app:
-    build: .
+    image: whalesdmtr/expense_tracker-app
     ports:
       - "8000:8000"
     environment:
