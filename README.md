@@ -1,6 +1,6 @@
 # 💰 Expense Tracker
 
-## Python REST API for managing and tracking your expenses — built with FastAPI, Docker, and Alembic
+## REST API for managing and tracking your expenses 
 
 This project provides a simple, secure, and extensible REST API to manage personal expenses.  
 You can track your spending habits, store expenses, and search them with flexible filtering (including regex support).
@@ -13,7 +13,8 @@ You can track your spending habits, store expenses, and search them with flexibl
 - 🪪 JWT-based authentication and authorization  
 - ✅ Full CRUD support for expenses  
 - 🔍 Search expenses by text or regular expressions  
-- 🐳 Dockerized environment with auto-applied Alembic migrations  
+- 🗄️ Database migrations powered by Alembic  
+- 🐳 Fully Dockerized environment  
 
 ---
 
@@ -22,8 +23,8 @@ You can track your spending habits, store expenses, and search them with flexibl
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/expense-tracker.git
-cd expense-tracker
+git clone https://github.com/whales-dmtr/expense_tracker.git
+cd expense_tracker
 ```
 
 ### 2. Create .env file
@@ -45,7 +46,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=10
 ### 3. Run with Docker Compose
 
 ```bash
-docker-compose up --build
+docker-compose up 
 ```
 
 ----
@@ -53,8 +54,8 @@ docker-compose up --build
 
 Interactive documentation available when the server is running:
 
-- 🔹 Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)  
-- 🔹 ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- 🔹 Swagger UI: [link](http://localhost:8000/docs)  
+- 🔹 ReDoc: [link](http://localhost:8000/redoc)
 
 ---
 
@@ -82,8 +83,8 @@ Interactive documentation available when the server is running:
 
 ## 🧩 Tech Stack
 
-- **Backend**: FastAPI, Pydantic, SQLAlchemy  
-- **Database**: PostgreSQL  
+- **Backend**: Python, FastAPI
+- **Database**: PostgreSQL, Alembic
 - **Auth**: JWT (JSON Web Tokens)  
 - **Migrations**: Alembic  
 - **Containerization**: Docker & Docker Compose  
@@ -94,7 +95,7 @@ For local development without Docker, install dependencies and run manually (but
 
 ```bash
 # Create and activate virtual environment
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
