@@ -22,8 +22,8 @@ You can track your spending habits, store expenses, and search them with flexibl
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/expense-tracker.git
-cd expense-tracker
+git clone https://github.com/whales-dmtr/expense_tracker.git
+cd expense_tracker
 ```
 
 ### 2. Create .env file
@@ -82,7 +82,7 @@ Interactive documentation available when the server is running:
 
 ## 🧩 Tech Stack
 
-- **Backend**: FastAPI, Pydantic, SQLAlchemy  
+- **Backend**: Python, FastAPI, Pydantic, SQLModel  
 - **Database**: PostgreSQL  
 - **Auth**: JWT (JSON Web Tokens)  
 - **Migrations**: Alembic  
@@ -94,7 +94,7 @@ For local development without Docker, install dependencies and run manually (but
 
 ```bash
 # Create and activate virtual environment
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
