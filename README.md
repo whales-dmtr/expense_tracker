@@ -46,7 +46,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=10
 ### 3. Run with Docker Compose
 
 ```bash
-docker-compose up --build
+docker-compose up 
 ```
 
 ----
@@ -84,50 +84,46 @@ Interactive documentation available when the server is running:
 ## 🧩 Tech Stack
 
 - **Backend**: Python, FastAPI
-- **Database**: PostgreSQL, Alembic
+- **Database**: PostgreSQL
 - **Auth**: JWT (JSON Web Tokens)  
 - **Migrations**: Alembic  
 - **Containerization**: Docker & Docker Compose  
 
 ## 🛠️ Development
 
-For local development check following steps:
+To run the project locally, follow these steps:
 
 ```bash
-# This project works on Python 3.13.5
-# You can install this version from official Python site
-# Or using pyenv
+# This project requires Python 3.13.5
+# You can install it from the official Python website
+# or using pyenv:
 pyenv install 3.13.5
 
-
-# After, you should run a database
-# The simplest way to do it is by Docker
+# Start the database
+# The easiest way is to use Docker:
 docker run --name some-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=expense_tracker -d -p 5432:5432 postgres
-# If you don't have installed Docker you need to install PostgreSQL and create database manually
 
+# If you don't have Docker installed,
+# you'll need to install PostgreSQL manually and create the database
 
-# Create .env file 
-# Make sure you are in the ROOT of the project
+# Create a .env file
+# Make sure you're in the root directory of the project
 
-# If you used my docker command for setup the database 
-# you can just copy .env file which I mentioned in Installation section
+# If you used the Docker command above,
+# you can simply copy the .env file mentioned in the Installation section
 
-# If you create database by yourself 
-# you can copy template from .env.example, fill it up and continue 
+# If you created the database manually,
+# copy the template from .env.example, fill in the values, and continue
 
-
-# Create and activate virtual environment
+# Create and activate a virtual environment
 python3.13 -m venv venv
 source venv/bin/activate
-
 
 # Install dependencies
 python3.13 -m pip install -r requirements.txt
 
-
 # Run migrations
 alembic upgrade head
-
 
 # Start the application
 uvicorn app.main:app --reload
