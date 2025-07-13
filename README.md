@@ -20,7 +20,7 @@ You can track your spending habits, store expenses, and search them with flexibl
 
 ## 🧪 Installation & Usage (Docker Compose)
 
-### 1. Clone the repo
+### 1. Clone the reposity
 
 ```bash
 git clone https://github.com/whales-dmtr/expense_tracker.git
@@ -133,24 +133,37 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-### ✅ Running Tests
+## ✅ Running Tests
 
-After adding or modifying a feature, **make sure to run tests** to verify that the application's functionality is not broken:
+After adding or modifying a feature, **make sure to run tests** to verify that the application’s functionality is not broken.
+
+### 1) Tests require a **separate test database**
+
+You can create one using the following Docker command or set it up manually:
 
 ```bash
-pytest
+docker run --name test-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=expense_tracker_test -d -p 5433:5432 postgres
 ```
 
-Tests require a **separate test database** to run correctly.  
-Before running tests, create a test database manually (e.g. `expense_tracker_test`) and add a `.env.test` file in the root directory it should consist of one variable TEST_DB_URL with url for your test database:
+### 2) Create a `.env.test` file
+
+Make sure you're in the root directory of the project.
 
 ```env
 # .env.test
-TEST_DB_URL=postgresql+asyncpg://test_user:test_password@localhost:5432/expense_tracker_test
+TEST_DB_URL=postgresql://postgres:postgres@localhost:5433/expense_tracker_test
 ```
 
-> You can change the URL according to your environment or Docker test setup.
+You can modify this URL to match your environment or Docker test configuration.
 
+### 3) Run the tests
+
+Make sure the virtual environment is activated:
+
+```bash
+source venv/bin/activate
+pytest
+```
 
 ## 📝 License
 
